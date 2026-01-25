@@ -1,6 +1,6 @@
 # Linux Security Audit Tool
 
-A Python-based CLI tool that audits Linux systems for common security misconfigurations and produces risk-ranked findings with remediation guidance.
+A Python CLI tool that audits Linux systems for common security misconfigurations and reports findings with guidance.
 
 ## Features
 
