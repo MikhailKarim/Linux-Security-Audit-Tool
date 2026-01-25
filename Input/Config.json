@@ -1,0 +1,10 @@
+{
+  "CheckSSHRootLogin": true,
+  "CheckSSHPasswordAuth": true,
+  "CheckUIDZeroUsers": true,
+  "CheckFirewallStatus": true,
+  "CheckWorldWritableFiles": false,
+  "CheckSudoNoPasswordRules": true,
+  "WriteJsonResults": true,
+  "WriteTextResukts": true
+}
