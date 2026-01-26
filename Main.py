@@ -5,6 +5,9 @@ import asyncio
 import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Awaitable
+from colorama import Fore, Style, init as colorama_init
+
+colorama_init(autoreset=True)
 
 BASE = Path(__file__).resolve().parent
 INP = BASE / "Input" / "Config.json"
@@ -24,6 +27,30 @@ class Finding:
             f"- Evidence: {self.evidence}\n"
             f"- Recommendation: {self.recommendation}\n"
             )
+
+
+def severity_tag(severity: str) -> str:
+    colors = {
+        "HIGH": Fore.RED,
+        "MED": Fore.YELLOW,
+        "LOW": Fore.CYAN,
+        "INFO": Fore.GREEN,
+    }
+    color = colors.get(severity.upper(), Fore.WHITE)
+    return f"{Style.BRIGHT}{Fore.WHITE}[{color}{severity.upper()}{Fore.WHITE}]{Style.RESET_ALL}"
+
+
+def status_tag(valid: bool, label: str) -> str:
+    tag = "VALID" if valid else "INVALID"
+    color = Fore.GREEN if valid else Fore.RED
+    return f"{Style.BRIGHT}{Fore.WHITE}[{color}{tag}{Fore.WHITE}]{Style.RESET_ALL} {label}"
+
+
+def print_finding(item: Finding) -> None:
+    tag = severity_tag(item.severity)
+    print(f"{tag} {Style.BRIGHT}{item.title}{Style.RESET_ALL}")
+    print(f"  {Fore.WHITE}Evidence:{Style.RESET_ALL} {item.evidence}")
+    print(f"  {Fore.WHITE}Recommendation:{Style.RESET_ALL} {item.recommendation}")
 
 
 def load() -> Dict[str, bool]:
@@ -94,6 +121,22 @@ def summ(counts: Dict[str, int], total: int, risk: str, stamp: str) -> str:
         f"- Info: {counts['INFO']}\n"
         f"- Overall Risk: {risk}"
     )
+
+
+def print_summary(counts: Dict[str, int], total: int, risk: str, stamp: str) -> None:
+    risk_tag = severity_tag(risk.upper() if risk else "INFO")
+    header = f"{Style.BRIGHT}{Fore.WHITE}Audit Summary{Style.RESET_ALL}"
+    ts = f"{Fore.WHITE}Timestamp:{Style.RESET_ALL} {stamp}"
+    print(f"{header}  {ts}")
+    print(f"{Fore.WHITE}{'-' * 44}{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}Findings:{Style.RESET_ALL} {Style.BRIGHT}{total}{Style.RESET_ALL}")
+    print(f"{severity_tag('HIGH')} High   {counts['HIGH']}")
+    print(f"{severity_tag('MED')} Medium {counts['MED']}")
+    print(f"{severity_tag('LOW')} Low    {counts['LOW']}")
+    print(f"{severity_tag('INFO')} Info   {counts['INFO']}")
+    print(f"{Fore.WHITE}{'-' * 44}{Style.RESET_ALL}")
+    overall_tag = f"{Style.BRIGHT}{Fore.WHITE}[{Fore.GREEN}OVERALL RISK{Fore.WHITE}]{Style.RESET_ALL}"
+    print(f"{overall_tag} {risk}")
 
 
 def writetxt(results: List[Finding], summary: str, enabled: bool, clear: bool) -> None:
@@ -405,7 +448,7 @@ async def start() -> int:
     if "--dry-run" in sys.argv:
         config = load()
         if not config:
-            print(f"Unable to read {INP}")
+            print(status_tag(False, f"Unable to read {INP}"))
             return 1
         names = [
             "checkSshRootLogin",
@@ -416,11 +459,11 @@ async def start() -> int:
             "checkSudoNoPasswordRules",
         ]
         enabled = [key for key in names if flag(config, key)]
-        print("Dry run: checks that would execute")
+        print(status_tag(True, "Dry run: checks that would execute"))
         for key in enabled:
             print(f"- {key}")
         if not enabled:
-            print("No checks enabled in Config.json")
+            print(status_tag(False, "No checks enabled in Config.json"))
         return 0
 
     config = load()
@@ -442,6 +485,8 @@ async def start() -> int:
         )
         counts = {"HIGH": 0, "MED": 0, "LOW": 0, "INFO": 1}
         summary = summ(counts, 1, "Info", stamp)
+        print_finding(result)
+        print_summary(counts, 1, "Info", stamp)
         writetxt([result], summary, texton, clear)
         writejson(
             [result],
@@ -470,6 +515,8 @@ async def start() -> int:
         )
         counts = {"HIGH": 0, "MED": 0, "LOW": 0, "INFO": 1}
         summary = summ(counts, 1, "Info", stamp)
+        print_finding(result)
+        print_summary(counts, 1, "Info", stamp)
         writetxt([result], summary, texton, clear)
         writejson(
             [result],
@@ -495,6 +542,9 @@ async def start() -> int:
 
     total = len(results)
     summary = summ(counts, total, risk, stamp)
+    print_summary(counts, total, risk, stamp)
+    for item in results:
+        print_finding(item)
     writetxt(results, summary, texton, clear)
     writejson(
         results,
