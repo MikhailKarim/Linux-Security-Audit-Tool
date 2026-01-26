@@ -5,9 +5,9 @@ import asyncio
 import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Awaitable
-from colorama import Fore, Style, init as colorama_init
+from colorama import Fore, Style, init 
 
-colorama_init(autoreset=True)
+init(autoreset=True)
 
 BASE = Path(__file__).resolve().parent
 INP = BASE / "Input" / "Config.json"
