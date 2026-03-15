@@ -4,7 +4,7 @@ A Python-based CLI tool that audits Linux systems for common security misconfigu
 
 **Overview**
 
-This project demonstrates how security audits can be automated on Linux systems by identifying common misconfigurations such as insecure SSH settings, privilege issues, and weak file permissions.
+This project detects suspicious SSH activity by analysing authentication logs and identifying repeated failed login attempts from the same IP address.
 
 **Features**
 
